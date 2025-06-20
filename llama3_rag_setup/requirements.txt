@@ -1,0 +1,6 @@
+haystack
+ollama-haystack
+streamlit
+psycopg2-binary
+python-dotenv
+loguru

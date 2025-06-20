@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+llama3_rag_setup/data/
+ollama_data/
+pgdata/

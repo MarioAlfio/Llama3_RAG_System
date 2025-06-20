@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - /home/mario/.ollama:/root/.ollama
+    command: serve
+    restart: unless-stopped
+
+  haystack-streamlit:
+    build: 
+      context: .
+      dockerfile: Dockerfile  
+    depends_on:
+      - ollama
+      - postgres
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=ragdb
+      - POSTGRES_USER=raguser
+      - POSTGRES_PASSWORD=ragpass
+      - STREAMLIT_PASSWORD=supersecret
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=ragdb
+      - POSTGRES_USER=raguser
+      - POSTGRES_PASSWORD=ragpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../db/init/:/docker-entrypoint-initdb.d/
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  pgdata:
