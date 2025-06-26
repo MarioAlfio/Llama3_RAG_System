@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY llama3_rag_setup /app/llama3_rag_setup
 
 # Esponi le porte
-EXPOSE 8000
+#EXPOSE 8000
 EXPOSE 8501
 
 # Avvia Streamlit specificando il percorso completo

@@ -4,3 +4,31 @@
 2025-06-20 13:03:23.829 | INFO     | __main__:<module>:68 - Domanda utente: Who is Super Mario?
 2025-06-20 13:03:23.829 | INFO     | __main__:<module>:68 - Domanda utente: Who is Super Mario?
 2025-06-20 13:03:23.829 | INFO     | __main__:<module>:68 - Domanda utente: Who is Super Mario?
+2025-06-26 12:31:43.582 | INFO     | log_config:<module>:4 - Applicazione avviata
+2025-06-26 12:31:44.750 | INFO     | etl.blob_upload:get_uploaded_files_metadata:46 - [get_uploaded_files_metadata] Recupero lista file caricati
+2025-06-26 12:31:44.841 | ERROR    | etl.blob_upload:get_uploaded_files_metadata:68 - [get_uploaded_files_metadata] Errore nel recupero metadati: relation "raw_uploads" does not exist
+LINE 2: ...d, filename, user_id, upload_time, file_hash FROM raw_upload...
+                                                             ^
+
+Traceback (most recent call last):
+  File "/app/llama3_rag_setup/etl/blob_upload.py", line 50, in get_uploaded_files_metadata
+    cur.execute('''
+psycopg2.errors.UndefinedTable: relation "raw_uploads" does not exist
+LINE 2: ...d, filename, user_id, upload_time, file_hash FROM raw_upload...
+                                                             ^
+
+
+2025-06-26 12:39:36.388 | INFO     | log_config:<module>:4 - Applicazione avviata
+2025-06-26 12:39:36.520 | INFO     | etl.blob_upload:ensure_table_exists:28 - [ensure_table_exists] Tabella raw_uploads verificata/creata.
+2025-06-26 12:39:38.004 | INFO     | etl.blob_upload:get_uploaded_files_metadata:62 - [get_uploaded_files_metadata] Recupero lista file caricati
+2025-06-26 12:39:38.027 | INFO     | etl.blob_upload:get_uploaded_files_metadata:81 - [get_uploaded_files_metadata] Trovati 0 file nel DB
+2025-06-26 12:39:51.506 | INFO     | etl.blob_upload:save_file_blob_to_db:37 - [save_file_blob_to_db] Inizio salvataggio file: stock_details_5_years.csv per user: utente1
+2025-06-26 12:39:58.162 | INFO     | etl.blob_upload:save_file_blob_to_db:55 - [save_file_blob_to_db] File 'stock_details_5_years.csv' salvato con successo su DB con id 1
+2025-06-26 12:39:58.210 | INFO     | etl.blob_upload:get_uploaded_files_metadata:62 - [get_uploaded_files_metadata] Recupero lista file caricati
+2025-06-26 12:39:58.233 | INFO     | etl.blob_upload:get_uploaded_files_metadata:81 - [get_uploaded_files_metadata] Trovati 1 file nel DB
+2025-06-26 12:40:06.166 | INFO     | etl.blob_upload:save_file_blob_to_db:37 - [save_file_blob_to_db] Inizio salvataggio file: stock_details_5_years.csv per user: utente1
+2025-06-26 12:40:20.049 | INFO     | etl.blob_upload:save_file_blob_to_db:55 - [save_file_blob_to_db] File 'stock_details_5_years.csv' salvato con successo su DB con id 2
+2025-06-26 12:40:20.102 | INFO     | etl.blob_upload:get_uploaded_files_metadata:62 - [get_uploaded_files_metadata] Recupero lista file caricati
+2025-06-26 12:40:20.138 | INFO     | etl.blob_upload:get_uploaded_files_metadata:81 - [get_uploaded_files_metadata] Trovati 2 file nel DB
+2025-06-26 12:40:20.142 | INFO     | etl.blob_upload:get_file_blob_by_id:88 - [get_file_blob_by_id] Recupero file con id 1
+2025-06-26 12:40:22.659 | INFO     | etl.blob_upload:get_file_blob_by_id:99 - [get_file_blob_by_id] File id 1 recuperato con successo

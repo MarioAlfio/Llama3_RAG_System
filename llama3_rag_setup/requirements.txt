@@ -1,6 +1,43 @@
-haystack
-ollama-haystack
+# Core dependencies (install first)
+numpy
+pandas
+
+# Core RAG
 streamlit
+haystack-ai
+
+# Visualization
+plotly
+matplotlib
+seaborn
+
+# Database & Vector Store
 psycopg2-binary
-python-dotenv
+chromadb
+pgvector
+sqlalchemy
+
+# Web Search Agent
+duckduckgo-search
+requests
+beautifulsoup4
+
+# Document Processing
+pypdf
+python-docx
+openpyxl
+python-multipart
+
+# Background Tasks
+celery
+redis
+
+# Data Processing
+scikit-learn
+
+# Utilities
 loguru
+pydantic
+python-dotenv
+jwt
+bcrypt

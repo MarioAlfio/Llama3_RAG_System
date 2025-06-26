@@ -1,34 +1,85 @@
-version: "3.8"
 services:
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - /home/mario/.ollama:/root/.ollama
-    command: serve
-    restart: unless-stopped
+      - ./llama3_rag_setup/etl:/app/etl
+      - ./llama3_rag_setup/data:/data
+      - ./llama3_rag_setup/logs:/app/logs
+    environment:
+      - DB_USER=raguser
+      - DB_PASSWORD=ragpass
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=ragdb
+      - TABLE_NAME=raw_upload
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+# Commentata la parte llama/ollama
+# ollama:
+#   image: ollama/ollama:latest
+#   ports:
+#     - "11434:11434"
+#   volumes:
+#     - ./ollama_data:/root/.ollama
+# ---
 
   haystack-streamlit:
     build: 
       context: .
       dockerfile: Dockerfile  
     depends_on:
-      - ollama
       - postgres
+      - redis
+      - chromadb
+    volumes:
+      - ./llama3_rag_setup/etl:/app/etl
+      - ./llama3_rag_setup/data:/app/data
+      - ./llama3_rag_setup/logs:/app/logs
     environment:
-      - OLLAMA_URL=http://ollama:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=ragdb
       - POSTGRES_USER=raguser
       - POSTGRES_PASSWORD=ragpass
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8001
       - STREAMLIT_PASSWORD=supersecret
+    env_file:
+      - .env
     ports:
       - "8501:8501"
     restart: unless-stopped
 
+ # ChromaDB per vector store
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8001"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    restart: unless-stopped
+
+# Redis per caching e session management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     environment:
       - POSTGRES_DB=ragdb
       - POSTGRES_USER=raguser
@@ -37,9 +88,10 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ../db/init/:/docker-entrypoint-initdb.d/
+      - ./db/init/:/docker-entrypoint-initdb.d/
     restart: unless-stopped
 
 volumes:
-  ollama_data:
   pgdata:
+  redis_data:
+  chroma_data:

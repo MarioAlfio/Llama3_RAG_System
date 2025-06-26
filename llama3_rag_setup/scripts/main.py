@@ -1,72 +1,37 @@
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from etl.blob_upload import save_file_blob_to_db, get_uploaded_files_metadata, get_file_blob_by_id
 import streamlit as st
-from haystack import Document, Pipeline
-from haystack.components.builders.prompt_builder import PromptBuilder
-from haystack.components.retrievers.in_memory import InMemoryBM25Retriever
-from haystack.document_stores.in_memory import InMemoryDocumentStore
-from haystack_integrations.components.generators.ollama import OllamaGenerator
-from loguru import logger
+from etl.blob_upload import save_file_blob_to_db, get_uploaded_files_metadata, get_file_blob_by_id
+import pandas as pd
+import io
 
-# Logging
-logger.add("logs/app.log", rotation="10 MB")
+st.title("Upload e storico file su DB")
 
-# Sicurezza semplice: password da variabile ambiente
-PASSWORD = os.getenv("STREAMLIT_PASSWORD", "changeme")
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
+# --- UPLOAD NUOVO FILE ---
+uploaded_file = st.file_uploader("Carica un file CSV/Excel", type=["csv", "xlsx"])
+if uploaded_file is not None:
+    file_bytes = uploaded_file.getbuffer()
+    upload_id = save_file_blob_to_db(file_bytes, uploaded_file.name, user='utente1')
+    st.success(f"File caricato e salvato su DB! ID: {upload_id}")
 
-def login():
-    st.title("Login")
-    pwd = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if pwd == PASSWORD:
-            st.session_state["authenticated"] = True
-            st.success("Login effettuato!")
-        else:
-            st.error("Password errata")
-
-if not st.session_state["authenticated"]:
-    login()
-    st.stop()
-
-st.title("RAG con Llama3:8b (Ollama + Haystack)")
-
-# Carica documenti di esempio (puoi sostituire con i tuoi)
-docs = [
-    Document(content="Super Mario was an important politician"),
-    Document(content="Mario owns several castles and uses them to conduct important political business"),
-    Document(content="Super Mario was a successful military leader who fought off several invasion attempts by his arch rival - Bowser"),
-]
-
-# Setup pipeline Haystack
-document_store = InMemoryDocumentStore()
-document_store.write_documents(docs)
-
-template = """
-Given only the following information, answer the question.
-Ignore your own knowledge.
-
-Context:
-{% for document in documents %}
-    {{ document.content }}
-{% endfor %}
-
-Question: {{ query }}?
-"""
-
-pipe = Pipeline()
-pipe.add_component("retriever", InMemoryBM25Retriever(document_store=document_store))
-pipe.add_component("prompt_builder", PromptBuilder(template=template))
-pipe.add_component("llm", OllamaGenerator(model="llama3:8b", url="http://ollama:11434"))
-pipe.connect("retriever", "prompt_builder.documents")
-pipe.connect("prompt_builder", "llm")
-
-# Interfaccia Streamlit
-query = st.text_input("Fai una domanda sui documenti caricati:")
-
-if st.button("Chiedi") and query:
-    logger.info(f"Domanda utente: {query}")
-    response = pipe.run({"prompt_builder": {"query": query}, "retriever": {"query": query}})
-    answer = response["llm"]["replies"][0]
-    st.write("**Risposta:**", answer)
-    logger.info(f"Risposta: {answer}")
+# --- STORICO E VISUALIZZAZIONE FILE ---
+st.header("Storico file caricati su DB")
+files = get_uploaded_files_metadata()
+if files:
+    for f in files:
+        st.write(f"ID: {f['id']} | Nome: {f['filename']} | User: {f['user']} | Data: {f['upload_time']}")
+        if st.button(f"Visualizza {f['filename']}", key=f"show_{f['id']}"):
+            file_bytes, filename = get_file_blob_by_id(f['id'])
+            if file_bytes:
+                # Carica DataFrame in memoria
+                if filename.endswith('.csv'):
+                    df = pd.read_csv(io.BytesIO(file_bytes))
+                else:
+                    df = pd.read_excel(io.BytesIO(file_bytes))
+                st.write(df.head())
+            else:
+                st.error("File non trovato nel DB.")
+else:
+    st.info("Nessun file caricato nel database.")
