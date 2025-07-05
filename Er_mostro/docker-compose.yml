@@ -1,0 +1,93 @@
+services:
+
+  etl:
+    build: ./llama3_rag_setup/etl
+    container_name: etl_service
+    env_file:
+      - ./llama3_rag_setup/etl/.env
+    depends_on:
+      - postgres
+    networks:
+      - micro-net
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+
+  eda:
+    build: ./llama3_rag_setup/eda_engine
+    container_name: eda_service
+    env_file:
+      - ./llama3_rag_setup/eda_engine/.env
+    depends_on:
+      - postgres
+    networks:
+      - micro-net
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      - POSTGRES_DB=ragdb
+      - POSTGRES_USER=raguser
+      - POSTGRES_PASSWORD=ragpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init/:/docker-entrypoint-initdb.d/
+    restart: unless-stopped
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raguser -d ragdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  chatbot:
+    container_name: chatbot
+    build:
+      context: .
+      dockerfile: llama3_rag_setup/chatbot/Dockerfile
+    ports:
+      - "8501:8501"
+    depends_on:
+      - postgres
+      - eda
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EDA_SERVICE_URL=http://eda:8002/eda
+      - ETL_SERVICE_URL=http://etl:8001
+    volumes:
+      - ./llama3_rag_setup/data:/app/llama3_rag_setup/data
+    restart: unless-stopped
+    networks:
+      - micro-net
+
+  eda_frontend:
+    build:
+      context: ./llama3_rag_setup/eda_engine
+      dockerfile: Dockerfile
+    container_name: eda_frontend
+    ports:
+      - "8503:8501"
+    environment:
+      - ETL_API_URL=http://etl:8001
+      - EDA_API_URL=http://eda:8002/eda
+    volumes:
+      - ../data:/app/llama3_rag_setup/data
+    command: streamlit run app/main_eda.py --server.port=8501 --server.address=0.0.0.0
+    networks:
+      - micro-net
+    depends_on:
+      - etl
+      - eda
+
+volumes:
+  pgdata:
+
+networks:
+  micro-net:
+    driver: bridge

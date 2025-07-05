@@ -1,0 +1,44 @@
+# Core dependencies (install first)
+numpy
+pandas
+
+# Core RAG
+streamlit
+haystack-ai>=2.0
+
+# Visualization
+plotly
+matplotlib
+seaborn
+
+# Database & Vector Store
+psycopg2-binary
+chromadb
+pgvector
+sqlalchemy
+
+# Document Processing
+pypdf
+python-docx
+openpyxl
+python-multipart
+
+# Background Tasks
+celery
+redis
+
+# Data Processing
+scikit-learn
+
+# Utilities
+loguru
+pydantic>=2.6,<3.0
+python-dotenv
+pyjwt
+bcrypt
+
+fastapi
+uvicorn
+nltk
+
+chroma-haystack
